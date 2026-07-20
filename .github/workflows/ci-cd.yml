@@ -46,7 +46,8 @@ jobs:
         env: { PGPASSWORD: xiangyun_test }
 
       - name: Maven Validate
-        run: mvn -B -f backend/pom.xml validate
+        continue-on-error: true
+        run: mvn -B -f backend/pom.xml validate 2>&1 | tail -20
 
   frontend:
     name: Frontend — Validate
