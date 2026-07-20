@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: xiangyun-account
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+        namespace: xiangyun-zhifang
+      config:
+        server-addr: localhost:8848
+        namespace: xiangyun-zhifang
+        file-extension: yaml
+        shared-configs:
+          - data-id: xiangyun-common.yaml
+            group: DEFAULT_GROUP
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/xiangyun_zhifang
+    username: xiangyun_app
+    password: xiangyun_dev_2026
+    driver-class-name: org.postgresql.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: xiangyun_redis_2026
+
+server:
+  port: 8081
+
+jwt:
+  secret: xiangyun-zhifang-jwt-secret-key-min-256-bits-change-in-production!!
+  expiration: 7200
+  refresh-expiration: 604800
+
+logging:
+  level:
+    com.xiangyun.account: DEBUG

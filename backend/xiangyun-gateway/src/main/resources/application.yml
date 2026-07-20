@@ -1,0 +1,139 @@
+spring:
+  application:
+    name: xiangyun-gateway
+
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+        namespace: xiangyun-zhifang
+      config:
+        server-addr: localhost:8848
+        namespace: xiangyun-zhifang
+        file-extension: yaml
+        shared-configs:
+          - data-id: xiangyun-common.yaml
+            group: DEFAULT_GROUP
+            refresh: true
+
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        # === Account 帳號服務 ===
+        - id: xiangyun-account
+          uri: lb://xiangyun-account
+          predicates:
+            - Path=/api/v1/account/**
+          filters:
+            - StripPrefix=0
+
+        # === Patient 患者服務 ===
+        - id: xiangyun-patient
+          uri: lb://xiangyun-patient
+          predicates:
+            - Path=/api/v1/patient/**
+          filters:
+            - StripPrefix=0
+
+        # === Doctor 醫生服務 ===
+        - id: xiangyun-doctor
+          uri: lb://xiangyun-doctor
+          predicates:
+            - Path=/api/v1/doctor/**
+          filters:
+            - StripPrefix=0
+
+        # === EMR 電子病歷 ===
+        - id: xiangyun-emr
+          uri: lb://xiangyun-emr
+          predicates:
+            - Path=/api/v1/emr/**
+          filters:
+            - StripPrefix=0
+
+        # === Prescription 處方 ===
+        - id: xiangyun-prescription
+          uri: lb://xiangyun-prescription
+          predicates:
+            - Path=/api/v1/prescription/**
+          filters:
+            - StripPrefix=0
+
+        # === HIS 門診 ===
+        - id: xiangyun-his
+          uri: lb://xiangyun-his
+          predicates:
+            - Path=/api/v1/his/**
+          filters:
+            - StripPrefix=0
+
+        # === Inventory 庫存 ===
+        - id: xiangyun-inventory
+          uri: lb://xiangyun-inventory
+          predicates:
+            - Path=/api/v1/inventory/**
+          filters:
+            - StripPrefix=0
+
+        # === Finance 財務 ===
+        - id: xiangyun-finance
+          uri: lb://xiangyun-finance
+          predicates:
+            - Path=/api/v1/finance/**
+          filters:
+            - StripPrefix=0
+
+        # === Decoction 煎藥 ===
+        - id: xiangyun-decoction
+          uri: lb://xiangyun-decoction
+          predicates:
+            - Path=/api/v1/decoction/**
+          filters:
+            - StripPrefix=0
+
+        # === Logistics 物流 ===
+        - id: xiangyun-logistics
+          uri: lb://xiangyun-logistics
+          predicates:
+            - Path=/api/v1/logistics/**
+          filters:
+            - StripPrefix=0
+
+        # === Callback 回調（第三方→本系統）===
+        - id: xiangyun-callback
+          uri: lb://xiangyun-decoction
+          predicates:
+            - Path=/api/v1/callback/decoction/**
+          filters:
+            - StripPrefix=0
+        - id: xiangyun-logistics-callback
+          uri: lb://xiangyun-logistics
+          predicates:
+            - Path=/api/v1/callback/logistics/**
+
+server:
+  port: 8080
+
+jwt:
+  secret: xiangyun-zhifang-jwt-secret-key-min-256-bits-change-in-production!!
+
+logging:
+  level:
+    com.xiangyun.gateway: DEBUG
+
+springdoc:
+  swagger-ui:
+    enabled: true
+  api-docs:
+    enabled: true
+
+knife4j:
+  gateway:
+    enabled: true
+    strategy: discover
+    discover:
+      enabled: true
+      version: openapi3

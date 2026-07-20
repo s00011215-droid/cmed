@@ -1,0 +1,7 @@
+spring.application.name: xiangyun-patient
+spring.cloud.nacos.discovery.server-addr: localhost:8848
+spring.cloud.nacos.discovery.namespace: xiangyun-zhifang
+spring.datasource.url: jdbc:postgresql://localhost:5432/xiangyun_zhifang
+spring.datasource.username: xiangyun_app
+spring.datasource.password: xiangyun_dev_2026
+server.port: 8082

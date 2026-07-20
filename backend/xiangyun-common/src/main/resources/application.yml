@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: xiangyun-common
+  profiles:
+    active: dev
+
+---
+# ================================================================
+# 開發環境配置
+# ================================================================
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:postgresql://localhost:5432/xiangyun_zhifang?currentSchema=public
+    username: xiangyun_app
+    password: xiangyun_dev_2026
+    driver-class-name: org.postgresql.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000
+      validation-query: SELECT 1
+      test-on-borrow: false
+      test-while-idle: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: xiangyun_redis_2026
+      database: 0
+
+mybatis-plus:
+  global-config:
+    db-config:
+      id-type: assign_id
+      logic-delete-field: deleted
+      logic-delete-value: true
+      logic-not-delete-value: false
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    com.xiangyun: DEBUG
+    org.springframework.security: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] [%X{traceId}] %-5level %logger{36} - %msg%n"
+
+# SpringDoc OpenAPI
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html

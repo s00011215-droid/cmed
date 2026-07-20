@@ -1,0 +1,365 @@
+# ============================================================================
+# 祥雲智方中醫診症系統 — Docker Compose 開發/測試環境
+# 版本：V1.0
+# 包含：PostgreSQL 15 + Redis + RocketMQ + MinIO + Nacos + PgBouncer
+# ============================================================================
+
+version: '3.8'
+
+# ============================================================================
+# 網路
+# ============================================================================
+networks:
+  xiangyun-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+
+# ============================================================================
+# 儲存卷
+# ============================================================================
+volumes:
+  pg-primary-data:
+  pg-standby-data:
+  redis-data:
+  minio-data:
+  nacos-data:
+  rocketmq-ns-data:
+  rocketmq-broker-data:
+  etcd-data:
+
+# ============================================================================
+# 服務
+# ============================================================================
+services:
+
+  # ==========================================================================
+  # 1. PostgreSQL 15 — 主庫 (可與 Patroni 整合)
+  # ==========================================================================
+  postgres-primary:
+    image: postgres:15-alpine
+    container_name: xiangyun-pg-primary
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: xiangyun_zhifang
+      POSTGRES_USER: xiangyun_app
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-xiangyun_dev_2026}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C.UTF-8"
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - pg-primary-data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d  # 自動執行初始化 SQL
+    ports:
+      - "5432:5432"
+    networks:
+      xiangyun-net:
+        ipv4_address: 172.25.0.10
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U xiangyun_app -d xiangyun_zhifang"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: |
+      postgres
+      -c shared_preload_libraries=pg_stat_statements,pgcrypto
+      -c max_connections=200
+      -c shared_buffers=512MB
+      -c effective_cache_size=1536MB
+      -c maintenance_work_mem=128MB
+      -c wal_level=replica
+      -c max_wal_senders=3
+      -c wal_keep_size=256MB
+      -c hot_standby=on
+      -c logging_collector=on
+      -c log_directory=/var/log/postgresql
+      -c log_filename=postgresql-%Y-%m-%d.log
+      -c log_min_duration_statement=1000
+      -c log_lock_waits=on
+
+  # ==========================================================================
+  # 2. PostgreSQL — 從庫（讀取分流）(可選，開發環境可關閉)
+  # ==========================================================================
+  # postgres-standby:
+  #   image: postgres:15-alpine
+  #   container_name: xiangyun-pg-standby
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: xiangyun_zhifang
+  #     POSTGRES_USER: xiangyun_app
+  #     POSTGRES_PASSWORD: ${PG_PASSWORD:-xiangyun_dev_2026}
+  #   volumes:
+  #     - pg-standby-data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5433:5432"
+  #   networks:
+  #     xiangyun-net:
+  #       ipv4_address: 172.25.0.11
+  #   depends_on:
+  #     postgres-primary:
+  #       condition: service_healthy
+
+  # ==========================================================================
+  # 3. PgBouncer — 連接池
+  # ==========================================================================
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: xiangyun-pgbouncer
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres-primary
+      DB_PORT: 5432
+      DB_USER: xiangyun_app
+      DB_PASSWORD: ${PG_PASSWORD:-xiangyun_dev_2026}
+      DB_NAME: xiangyun_zhifang
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 500
+      DEFAULT_POOL_SIZE: 25
+      MAX_DB_CONNECTIONS: 50
+      AUTH_TYPE: md5
+    ports:
+      - "6432:6432"
+    networks:
+      xiangyun-net:
+        ipv4_address: 172.25.0.20
+    depends_on:
+      postgres-primary:
+        condition: service_healthy
+
+  # ==========================================================================
+  # 4. Redis 7 — 快取 / 分布式鎖 / Session
+  # ==========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: xiangyun-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:-xiangyun_redis_2026}
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+      --appendfsync everysec
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      xiangyun-net:
+        ipv4_address: 172.25.0.30
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ==========================================================================
+  # 5. MinIO — 物件儲存（音視訊 / 病歷影像 / 處方簽章）
+  # ==========================================================================
+  minio:
+    image: minio/minio:latest
+    container_name: xiangyun-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER:-xiangyun_admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-xiangyun_minio_2026}
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9000:9000"   # API
+      - "9001:9001"   # Console
+    networks:
+      xiangyun-net:
+        ipv4_address: 172.25.0.40
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================================================
+  # 6. RocketMQ — NameServer
+  # ==========================================================================
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.1.4
+    container_name: xiangyun-rocketmq-namesrv
+    restart: unless-stopped
+    environment:
+      JAVA_OPT_EXT: "-server -Xms256m -Xmx256m -Xmn128m"
+    volumes:
+      - rocketmq-ns-data:/home/rocketmq/logs
+    ports:
+      - "9876:9876"
+    networks:
+      xiangyun-net:
+        ipv4_address: 172.25.0.50
+    command: sh mqnamesrv
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9876/ > /dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  # ==========================================================================
+  # 7. RocketMQ — Broker
+  # ==========================================================================
+  rocketmq-broker:
+    image: apache/rocketmq:5.1.4
+    container_name: xiangyun-rocketmq-broker
+    restart: unless-stopped
+    depends_on:
+      rocketmq-namesrv:
+        condition: service_healthy
+    environment:
+      NAMESRV_ADDR: rocketmq-namesrv:9876
+      JAVA_OPT_EXT: "-server -Xms512m -Xmx512m -Xmn256m"
+    volumes:
+      - rocketmq-broker-data:/home/rocketmq/logs
+      - ./rocketmq/broker.conf:/home/rocketmq/rocketmq-5.1.4/conf/broker.conf
+    ports:
+      - "10909:10909"  # VIP channel
+      - "10911:10911"  # gRPC (RocketMQ 5.x)
+    networks:
+      xiangyun-net:
+        ipv4_address: 172.25.0.51
+    command: sh mqbroker -c /home/rocketmq/rocketmq-5.1.4/conf/broker.conf
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:10911/ > /dev/null || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 15
+
+  # ==========================================================================
+  # 8. Nacos 2.x — 服務註冊與配置中心 (Spring Cloud Alibaba)
+  # ==========================================================================
+  nacos:
+    image: nacos/nacos-server:v2.3.0
+    container_name: xiangyun-nacos
+    restart: unless-stopped
+    environment:
+      MODE: standalone
+      PREFER_HOST_MODE: hostname
+      SPRING_DATASOURCE_PLATFORM: embedded
+      NACOS_AUTH_ENABLE: "true"
+      NACOS_AUTH_TOKEN: SecretKey012345678901234567890123456789012345678901234567890123456789
+      NACOS_AUTH_IDENTITY_KEY: xiangyun_nacos
+      NACOS_AUTH_IDENTITY_VALUE: xiangyun_nacos_secret
+      JVM_XMS: 512m
+      JVM_XMX: 512m
+    volumes:
+      - nacos-data:/home/nacos/data
+      - ./nacos/custom.properties:/home/nacos/init.d/custom.properties
+    ports:
+      - "8848:8848"   # HTTP
+      - "9848:9848"   # gRPC
+      - "9849:9849"   # gRPC (raft)
+    networks:
+      xiangyun-net:
+        ipv4_address: 172.25.0.60
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:8848/nacos/v1/console/health/readiness"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  # ==========================================================================
+  # 9. etcd — 分散式鍵值存儲（Patroni 依賴 / 配置中心備選）
+  # ==========================================================================
+  etcd:
+    image: bitnami/etcd:3.5
+    container_name: xiangyun-etcd
+    restart: unless-stopped
+    environment:
+      ALLOW_NONE_AUTHENTICATION: "yes"
+      ETCD_ADVERTISE_CLIENT_URLS: http://etcd:2379
+      ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
+      ETCD_DATA_DIR: /bitnami/etcd/data
+    volumes:
+      - etcd-data:/bitnami/etcd/data
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+    networks:
+      xiangyun-net:
+        ipv4_address: 172.25.0.70
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================================================
+  # 10. XXL-JOB Admin — 定時任務調度中心（可選）
+  # ==========================================================================
+  # xxl-job-admin:
+  #   image: xuxueli/xxl-job-admin:2.4.0
+  #   container_name: xiangyun-xxl-job
+  #   restart: unless-stopped
+  #   environment:
+  #     PARAMS: "--spring.datasource.url=jdbc:postgresql://postgres-primary:5432/xiangyun_zhifang?useSSL=false&serverTimezone=Asia/Hong_Kong
+  #              --spring.datasource.username=xiangyun_app
+  #              --spring.datasource.password=${PG_PASSWORD:-xiangyun_dev_2026}
+  #              --xxl.job.accessToken=xiangyun_xxl_token"
+  #   ports:
+  #     - "8080:8080"
+  #   networks:
+  #     xiangyun-net:
+  #       ipv4_address: 172.25.0.80
+  #   depends_on:
+  #     postgres-primary:
+  #       condition: service_healthy
+
+  # ==========================================================================
+  # 11. Prometheus + Grafana — 監控（可選）
+  # ==========================================================================
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: xiangyun-prometheus
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+  #   ports:
+  #     - "9090:9090"
+  #   networks:
+  #     xiangyun-net:
+  #       ipv4_address: 172.25.0.90
+  #
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: xiangyun-grafana
+  #   restart: unless-stopped
+  #   environment:
+  #     GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+  #     GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-xiangyun_grafana_2026}
+  #   ports:
+  #     - "3000:3000"
+  #   networks:
+  #     xiangyun-net:
+  #       ipv4_address: 172.25.0.91
+  #   depends_on:
+  #     - prometheus
+
+  # ==========================================================================
+  # 12. Elasticsearch — 全文檢索（可選，視需要啟用）
+  # ==========================================================================
+  # elasticsearch:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+  #   container_name: xiangyun-es
+  #   restart: unless-stopped
+  #   environment:
+  #     discovery.type: single-node
+  #     xpack.security.enabled: "false"
+  #     ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+  #   ports:
+  #     - "9200:9200"
+  #   networks:
+  #     xiangyun-net:
+  #       ipv4_address: 172.25.0.100
+
+# ============================================================================
+# 環境變數說明（可透過 .env 檔案覆蓋）
+# ============================================================================
+# PG_PASSWORD: PostgreSQL 密碼，預設 xiangyun_dev_2026
+# REDIS_PASSWORD: Redis 密碼，預設 xiangyun_redis_2026
+# MINIO_USER / MINIO_PASSWORD: MinIO 管理員帳密

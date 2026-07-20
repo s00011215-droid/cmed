@@ -1,0 +1,695 @@
+# ============================================================================
+# 祥雲智方中醫診症系統 — Kubernetes 部署配置 V1.0
+# 包含：Namespace / ConfigMap / Secret / StatefulSet(PostgreSQL) / Deployments / Services
+# ============================================================================
+
+---
+# ============================================================================
+# 1. Namespace
+# ============================================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: xiangyun-zhifang
+  labels:
+    app: xiangyun
+    env: production
+
+---
+# ============================================================================
+# 2. ConfigMap — 應用配置
+# ============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: xiangyun-config
+  namespace: xiangyun-zhifang
+data:
+  # 資料庫
+  DB_HOST: "xiangyun-pgbouncer"
+  DB_PORT: "6432"
+  DB_NAME: "xiangyun_zhifang"
+  DB_POOL_SIZE: "25"
+  DB_POOL_MODE: "transaction"
+
+  # Redis
+  REDIS_HOST: "xiangyun-redis"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+
+  # RocketMQ
+  ROCKETMQ_NAMESRV: "xiangyun-rocketmq-namesrv:9876"
+
+  # Nacos
+  NACOS_SERVER: "xiangyun-nacos:8848"
+  NACOS_NAMESPACE: "xiangyun-zhifang"
+
+  # MinIO
+  MINIO_ENDPOINT: "http://xiangyun-minio:9000"
+  MINIO_BUCKET_EMR: "emr-images"
+  MINIO_BUCKET_CONSULT: "consult-recordings"
+  MINIO_BUCKET_SIGNATURE: "prescription-signatures"
+
+  # JWT
+  JWT_EXPIRATION: "7200"
+  JWT_REFRESH_EXPIRATION: "604800"
+
+  # 煎藥中心
+  DECOCTION_CENTER_URL: "https://decoction-center.example.com/api/v1"
+  DECOCTION_CALLBACK_SECRET: "CHANGE_ME_DECOCTION"
+
+  # 物流
+  LOGISTICS_PROVIDER_URL: "https://api.kuaidi100.com"
+  LOGISTICS_CALLBACK_SECRET: "CHANGE_ME_LOGISTICS"
+
+  # 應用通用
+  LOG_LEVEL: "INFO"
+  TIMEZONE: "Asia/Hong_Kong"
+
+---
+# ============================================================================
+# 3. Secret — 敏感配置
+# ============================================================================
+apiVersion: v1
+kind: Secret
+metadata:
+  name: xiangyun-secrets
+  namespace: xiangyun-zhifang
+type: Opaque
+stringData:
+  DB_USERNAME: "xiangyun_app"
+  DB_PASSWORD: "CHANGE_ME_DB_PASSWORD"
+  REDIS_PASSWORD: "CHANGE_ME_REDIS_PASSWORD"
+  MINIO_ACCESS_KEY: "xiangyun_admin"
+  MINIO_SECRET_KEY: "CHANGE_ME_MINIO_KEY"
+  JWT_SECRET: "CHANGE_ME_JWT_SECRET_AT_LEAST_256_BITS"
+  DECOCTION_HMAC_KEY: "CHANGE_ME_HMAC_KEY"
+  LOGISTICS_API_KEY: "CHANGE_ME_LOGISTICS_KEY"
+
+---
+# ============================================================================
+# 4. PostgreSQL — StatefulSet (簡化版，生產環境建議用 Patroni Operator)
+# ============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: xiangyun-postgres
+  namespace: xiangyun-zhifang
+  labels:
+    app: postgres
+spec:
+  type: ClusterIP
+  clusterIP: None  # Headless Service for StatefulSet
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: pg
+  selector:
+    app: postgres
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: xiangyun-postgres
+  namespace: xiangyun-zhifang
+spec:
+  serviceName: xiangyun-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          env:
+            - name: POSTGRES_DB
+              value: xiangyun_zhifang
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: xiangyun-secrets
+                  key: DB_USERNAME
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: xiangyun-secrets
+                  key: DB_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          ports:
+            - containerPort: 5432
+              name: pg
+          volumeMounts:
+            - name: pg-data
+              mountPath: /var/lib/postgresql/data
+            - name: init-sql
+              mountPath: /docker-entrypoint-initdb.d
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "4Gi"
+              cpu: "2000m"
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "xiangyun_app", "-d", "xiangyun_zhifang"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "xiangyun_app", "-d", "xiangyun_zhifang"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: init-sql
+          configMap:
+            name: xiangyun-init-sql  # 將 SQL 初始化腳本掛載為 ConfigMap
+  volumeClaimTemplates:
+    - metadata:
+        name: pg-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 50Gi
+        storageClassName: standard  # 依雲端環境調整
+
+---
+# ============================================================================
+# 5. PgBouncer — Deployment
+# ============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: xiangyun-pgbouncer
+  namespace: xiangyun-zhifang
+spec:
+  type: ClusterIP
+  ports:
+    - port: 6432
+      targetPort: 6432
+      name: pgbouncer
+  selector:
+    app: pgbouncer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xiangyun-pgbouncer
+  namespace: xiangyun-zhifang
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pgbouncer
+  template:
+    metadata:
+      labels:
+        app: pgbouncer
+    spec:
+      containers:
+        - name: pgbouncer
+          image: edoburu/pgbouncer:latest
+          env:
+            - name: DB_HOST
+              value: "xiangyun-postgres"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: xiangyun-config
+                  key: DB_NAME
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: xiangyun-secrets
+                  key: DB_USERNAME
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: xiangyun-secrets
+                  key: DB_PASSWORD
+            - name: POOL_MODE
+              value: "transaction"
+            - name: MAX_CLIENT_CONN
+              value: "500"
+            - name: DEFAULT_POOL_SIZE
+              value: "25"
+          ports:
+            - containerPort: 6432
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+
+---
+# ============================================================================
+# 6. Redis — StatefulSet
+# ============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: xiangyun-redis
+  namespace: xiangyun-zhifang
+spec:
+  type: ClusterIP
+  ports:
+    - port: 6379
+      targetPort: 6379
+      name: redis
+  selector:
+    app: redis
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: xiangyun-redis
+  namespace: xiangyun-zhifang
+spec:
+  serviceName: xiangyun-redis
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          command:
+            - redis-server
+            - --requirepass
+            - "$(REDIS_PASSWORD)"
+            - --maxmemory
+            - "512mb"
+            - --maxmemory-policy
+            - allkeys-lru
+            - --appendonly
+            - "yes"
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: xiangyun-secrets
+                  key: REDIS_PASSWORD
+          ports:
+            - containerPort: 6379
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          livenessProbe:
+            exec:
+              command: ["redis-cli", "--raw", "incr", "ping"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
+
+---
+# ============================================================================
+# 7. MinIO — StatefulSet
+# ============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: xiangyun-minio
+  namespace: xiangyun-zhifang
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9000
+      targetPort: 9000
+      name: api
+    - port: 9001
+      targetPort: 9001
+      name: console
+  selector:
+    app: minio
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: xiangyun-minio
+  namespace: xiangyun-zhifang
+spec:
+  serviceName: xiangyun-minio
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      containers:
+        - name: minio
+          image: minio/minio:latest
+          args: ["server", "/data", "--console-address", ":9001"]
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: xiangyun-secrets
+                  key: MINIO_ACCESS_KEY
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: xiangyun-secrets
+                  key: MINIO_SECRET_KEY
+          ports:
+            - containerPort: 9000
+            - containerPort: 9001
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+  volumeClaimTemplates:
+    - metadata:
+        name: minio-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 50Gi
+
+---
+# ============================================================================
+# 8. Nacos — StatefulSet
+# ============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: xiangyun-nacos
+  namespace: xiangyun-zhifang
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8848
+      targetPort: 8848
+      name: http
+    - port: 9848
+      targetPort: 9848
+      name: grpc
+  selector:
+    app: nacos
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: xiangyun-nacos
+  namespace: xiangyun-zhifang
+spec:
+  serviceName: xiangyun-nacos
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nacos
+  template:
+    metadata:
+      labels:
+        app: nacos
+    spec:
+      containers:
+        - name: nacos
+          image: nacos/nacos-server:v2.3.0
+          env:
+            - name: MODE
+              value: standalone
+            - name: PREFER_HOST_MODE
+              value: hostname
+            - name: NACOS_AUTH_ENABLE
+              value: "true"
+          ports:
+            - containerPort: 8848
+            - containerPort: 9848
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+
+---
+# ============================================================================
+# 9. RocketMQ NameServer — Deployment
+# ============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: xiangyun-rocketmq-namesrv
+  namespace: xiangyun-zhifang
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9876
+      targetPort: 9876
+      name: namesrv
+  selector:
+    app: rocketmq-namesrv
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xiangyun-rocketmq-namesrv
+  namespace: xiangyun-zhifang
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rocketmq-namesrv
+  template:
+    metadata:
+      labels:
+        app: rocketmq-namesrv
+    spec:
+      containers:
+        - name: namesrv
+          image: apache/rocketmq:5.1.4
+          command: ["sh", "mqnamesrv"]
+          env:
+            - name: JAVA_OPT_EXT
+              value: "-server -Xms256m -Xmx512m -Xmn128m"
+          ports:
+            - containerPort: 9876
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+
+---
+# ============================================================================
+# 10. RocketMQ Broker — Deployment
+# ============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: xiangyun-rocketmq-broker
+  namespace: xiangyun-zhifang
+spec:
+  type: ClusterIP
+  ports:
+    - port: 10911
+      targetPort: 10911
+      name: grpc
+  selector:
+    app: rocketmq-broker
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xiangyun-rocketmq-broker
+  namespace: xiangyun-zhifang
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rocketmq-broker
+  template:
+    metadata:
+      labels:
+        app: rocketmq-broker
+    spec:
+      containers:
+        - name: broker
+          image: apache/rocketmq:5.1.4
+          command:
+            - sh
+            - mqbroker
+            - -n
+            - "xiangyun-rocketmq-namesrv:9876"
+          env:
+            - name: JAVA_OPT_EXT
+              value: "-server -Xms512m -Xmx1g -Xmn256m"
+            - name: NAMESRV_ADDR
+              value: "xiangyun-rocketmq-namesrv:9876"
+          ports:
+            - containerPort: 10911
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+
+---
+# ============================================================================
+# 11. 微服務 Deployment 範本
+#     以下以 decoction-service 為例，其餘服務格式相同
+# ============================================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: xiangyun-decoction-service
+  namespace: xiangyun-zhifang
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: http
+  selector:
+    app: decoction-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xiangyun-decoction-service
+  namespace: xiangyun-zhifang
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: decoction-service
+  template:
+    metadata:
+      labels:
+        app: decoction-service
+    spec:
+      containers:
+        - name: decoction-service
+          image: registry.example.com/xiangyun/decoction-service:latest
+          envFrom:
+            - configMapRef:
+                name: xiangyun-config
+            - secretRef:
+                name: xiangyun-secrets
+          env:
+            - name: SERVER_PORT
+              value: "8080"
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+
+---
+# ============================================================================
+# 12. HPA — 水平自動伸縮（以 decoction-service 為例）
+# ============================================================================
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: xiangyun-decoction-service-hpa
+  namespace: xiangyun-zhifang
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: xiangyun-decoction-service
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+---
+# ============================================================================
+# 13. Ingress — 外部流量入口（需安裝 Ingress Controller）
+# ============================================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: xiangyun-ingress
+  namespace: xiangyun-zhifang
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - api.xiangyun-zhifang.com
+      secretName: xiangyun-tls
+  rules:
+    - host: api.xiangyun-zhifang.com
+      http:
+        paths:
+          - path: /api/decoction
+            pathType: Prefix
+            backend:
+              service:
+                name: xiangyun-decoction-service
+                port:
+                  number: 8080
+          # ... 其他服務路由

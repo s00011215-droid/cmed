@@ -1,0 +1,54 @@
+package com.xiangyun.prescription.dto;
+
+import com.xiangyun.prescription.entity.Prescription.PrescriptionItem;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
+import lombok.Data;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
+public class PrescriptionDTO {
+
+    @Data @Schema(description = "建立/更新處方")
+    public static class SaveRequest {
+        private Long id;
+        @NotNull private Long patientId; @NotNull private Long doctorId;
+        private Long emrId;
+        @NotBlank private String visitType;
+        @Min(1) private Integer doseCount;
+        @Min(1) private Integer doseDays;
+        @NotEmpty @Valid private List<PrescriptionItem> items;
+        private String decoctionMethod;  // self / center
+        private String deliveryOption;   // pickup / delivery
+        private String diagnosisCode;
+    }
+
+    @Data @Schema(description = "處方列表項") public static class ListItem {
+        private Long id; private String prescriptionNo; private Long patientId;
+        private Long doctorId; private String status;
+        private Integer doseCount; private BigDecimal totalAmount;
+        private String decoctionMethod; private String signStatus;
+        private LocalDateTime createdAt;
+    }
+
+    @Data @Schema(description = "處方詳情") public static class DetailResponse {
+        private Long id; private String prescriptionNo;
+        private Long patientId; private Long doctorId; private Long emrId;
+        private String visitType; private String status;
+        private Integer doseCount; private Integer doseDays;
+        private List<PrescriptionItem> items;
+        private BigDecimal totalAmount; private BigDecimal decoctionFee; private BigDecimal deliveryFee;
+        private String decoctionMethod; private String deliveryOption;
+        private String diagnosisCode; private String signStatus;
+        private LocalDateTime signedAt; private String signAlgorithm;
+        private List<String> warnings;  // 配伍禁忌警告
+        private LocalDateTime createdAt;
+    }
+
+    @Data @Schema(description = "處方狀態流轉") public static class StatusTransition {
+        @NotBlank private String status;  // 目標狀態
+        private String comment;
+    }
+}

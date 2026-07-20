@@ -1,0 +1,78 @@
+# 祥雲智方 Helm Values — Production
+global:
+  imageRegistry: ghcr.io/xiangyun-zhifang
+  imageTag: latest
+  pullPolicy: IfNotPresent
+  namespace: xiangyun-zhifang
+  env: production
+  timezone: Asia/Hong_Kong
+
+postgresql:
+  enabled: false
+  external:
+    host: xiangyun-pg-primary
+    port: 5432
+    database: xiangyun_zhifang
+    username: xiangyun_app
+    passwordSecret: xiangyun-secrets
+    passwordKey: DB_PASSWORD
+
+pgbouncer:
+  enabled: true
+  replicas: 1
+  poolMode: transaction
+  maxClientConn: 500
+  defaultPoolSize: 25
+
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: true
+    existingSecret: xiangyun-secrets
+    existingSecretPasswordKey: REDIS_PASSWORD
+
+rocketmq:
+  enabled: true
+  namesrv: { replicas: 1 }
+  broker: { replicas: 1 }
+
+minio:
+  enabled: true
+  mode: standalone
+
+nacos:
+  enabled: true
+  replicaCount: 1
+
+services:
+  gateway:  { enabled: true, replicas: 2, port: 8080, ingress: { enabled: true, host: api.xiangyun-zhifang.com, tls: true } }
+  account:  { enabled: true, replicas: 2, port: 8081 }
+  patient:  { enabled: true, replicas: 2, port: 8082 }
+  emr:      { enabled: true, replicas: 2, port: 8084 }
+  prescription: { enabled: true, replicas: 2, port: 8085 }
+  his:      { enabled: true, replicas: 2, port: 8087 }
+  inventory: { enabled: true, replicas: 2, port: 8088 }
+  finance:  { enabled: true, replicas: 2, port: 8089 }
+  decoction: { enabled: true, replicas: 2, port: 8090 }
+  logistics: { enabled: true, replicas: 2, port: 8091 }
+  admin:    { enabled: true, replicas: 1, port: 8096 }
+  audit:    { enabled: true, replicas: 1, port: 8097 }
+  notify:   { enabled: true, replicas: 1, port: 8092 }
+  risk:     { enabled: true, replicas: 1, port: 8093 }
+  insurance: { enabled: true, replicas: 1, port: 8094 }
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilization: 70
+
+monitoring:
+  prometheus: { enabled: true, retention: 15d }
+  grafana: { enabled: true }
+
+backup:
+  enabled: true
+  schedule: "0 2 * * *"
+  retention: 30
