@@ -2,7 +2,7 @@ name: XiangYun ZhiFang CI/CD
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, master, develop]
     paths:
       - 'backend/**'
       - 'frontend/**'
