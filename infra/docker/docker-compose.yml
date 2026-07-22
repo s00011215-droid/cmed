@@ -4,8 +4,6 @@
 # 包含：PostgreSQL 15 + Redis + RocketMQ + MinIO + Nacos + PgBouncer
 # ============================================================================
 
-version: '3.8'
-
 # ============================================================================
 # 網路
 # ============================================================================
@@ -182,7 +180,7 @@ services:
   # 6. RocketMQ — NameServer
   # ==========================================================================
   rocketmq-namesrv:
-    image: apache/rocketmq:5.1.4
+    image: apache/rocketmq:5.3.0
     container_name: xiangyun-rocketmq-namesrv
     restart: unless-stopped
     environment:
@@ -205,7 +203,7 @@ services:
   # 7. RocketMQ — Broker
   # ==========================================================================
   rocketmq-broker:
-    image: apache/rocketmq:5.1.4
+    image: apache/rocketmq:5.3.0
     container_name: xiangyun-rocketmq-broker
     restart: unless-stopped
     depends_on:
@@ -216,14 +214,14 @@ services:
       JAVA_OPT_EXT: "-server -Xms512m -Xmx512m -Xmn256m"
     volumes:
       - rocketmq-broker-data:/home/rocketmq/logs
-      - ./rocketmq/broker.conf:/home/rocketmq/rocketmq-5.1.4/conf/broker.conf
+      - ./rocketmq/broker.conf:/home/rocketmq/conf/broker.conf
     ports:
-      - "10909:10909"  # VIP channel
-      - "10911:10911"  # gRPC (RocketMQ 5.x)
+      - "10909:10909"
+      - "10911:10911"
     networks:
       xiangyun-net:
         ipv4_address: 172.25.0.51
-    command: sh mqbroker -c /home/rocketmq/rocketmq-5.1.4/conf/broker.conf
+    command: sh mqbroker -c /home/rocketmq/conf/broker.conf
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://localhost:10911/ > /dev/null || exit 1"]
       interval: 20s
