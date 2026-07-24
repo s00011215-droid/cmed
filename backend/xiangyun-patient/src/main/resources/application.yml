@@ -1,38 +1,30 @@
-spring.application.name: xiangyun-patient
-
-# Profiles
-spring.profiles.active: dev
-
-# Datasource
-spring.datasource.url: jdbc:postgresql://localhost:5432/xiangyun_zhifang
-spring.datasource.username: xiangyun_app
-spring.datasource.password: xiangyun_dev_2026
-
-# Redis
-spring.data.redis.host: localhost
-spring.data.redis.port: 6379
-spring.data.redis.password: xiangyun_redis_2026
-spring.data.redis.database: 0
-
-# Nacos disabled
-spring.cloud.nacos.discovery.enabled: false
-spring.cloud.nacos.config.enabled: false
-
-# Exclude Nacos/Sentinel auto-configuration
-spring.autoconfigure.exclude:
-  - com.alibaba.cloud.nacos.NacosDiscoveryAutoConfiguration
-  - com.alibaba.cloud.nacos.NacosConfigAutoConfiguration
-  - com.alibaba.cloud.sentinel.SentinelWebAutoConfiguration
-  - com.alibaba.cloud.sentinel.SentinelAutoConfiguration
-  - com.alibaba.cloud.sentinel.endpoint.SentinelEndpointAutoConfiguration
-  - com.alibaba.cloud.sentinel.custom.SentinelAutoConfiguration
-
-server.port: 8082
-
-# Override MyBatis-Plus: disable logic delete (table has no 'deleted' column)
-mybatis-plus:
-  global-config:
-    db-config:
-      logic-delete-field: ""
-      logic-delete-value: ""
-      logic-not-delete-value: ""
+spring:
+  application:
+    name: xiangyun-patient
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+  datasource:
+    url: jdbc:postgresql://localhost:5432/xiangyun_zhifang
+    username: xiangyun_app
+    password: xiangyun_dev_2026
+    driver-class-name: org.postgresql.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: xiangyun_redis_2026
+  autoconfigure:
+    exclude:
+      - com.alibaba.cloud.nacos.NacosConfigAutoConfiguration
+      - com.alibaba.cloud.nacos.discovery.NacosDiscoveryClientAutoConfiguration
+      - com.alibaba.cloud.sentinel.SentinelWebAutoConfiguration
+      - com.alibaba.cloud.sentinel.SentinelAutoConfiguration
+server:
+  port: 8083
+logging:
+  level:
+    com.xiangyun.patient: DEBUG
