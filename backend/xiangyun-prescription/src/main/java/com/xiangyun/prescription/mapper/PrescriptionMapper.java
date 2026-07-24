@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Select;
 @Mapper
 public interface PrescriptionMapper extends BaseMapper<Prescription> {
 
-    @Select("SELECT * FROM prescription WHERE patient_id = #{patientId} AND deleted = false ORDER BY created_at DESC")
+    @Select("SELECT * FROM prescription WHERE patient_id = #{patientId} ORDER BY created_at DESC")
     Page<Prescription> findByPatient(Page<Prescription> page, @Param("patientId") Long patientId);
 
     @Select("SELECT * FROM prescription WHERE prescription_no = #{no} LIMIT 1")

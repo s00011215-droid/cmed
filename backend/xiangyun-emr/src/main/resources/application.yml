@@ -1,12 +1,32 @@
-spring.application.name: xiangyun-emr
-spring.cloud.nacos.discovery.enabled: false
-spring.cloud.nacos.config.enabled: false
-spring.autoconfigure.exclude:
-  - com.alibaba.cloud.nacos.NacosDiscoveryAutoConfiguration
-  - com.alibaba.cloud.nacos.NacosConfigAutoConfiguration
-  - com.alibaba.cloud.sentinel.SentinelWebAutoConfiguration
-  - com.alibaba.cloud.sentinel.SentinelAutoConfiguration
-spring.datasource.url: jdbc:postgresql://localhost:5432/xiangyun_zhifang
-spring.datasource.username: xiangyun_app
-spring.datasource.password: xiangyun_dev_2026
-server.port: 8084
+spring:
+  application:
+    name: xiangyun-emr
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+  datasource:
+    url: jdbc:postgresql://localhost:5432/xiangyun_zhifang
+    username: xiangyun_app
+    password: xiangyun_dev_2026
+    driver-class-name: org.postgresql.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: xiangyun_redis_2026
+  autoconfigure:
+    exclude:
+      - com.alibaba.cloud.nacos.NacosConfigAutoConfiguration
+      - com.alibaba.cloud.nacos.discovery.NacosDiscoveryClientAutoConfiguration
+      - com.alibaba.cloud.sentinel.SentinelWebAutoConfiguration
+      - com.alibaba.cloud.sentinel.SentinelAutoConfiguration
+
+server:
+  port: 8084
+
+logging:
+  level:
+    com.xiangyun.emr: DEBUG

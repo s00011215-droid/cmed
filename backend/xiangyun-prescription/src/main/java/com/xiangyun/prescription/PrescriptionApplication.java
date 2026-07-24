@@ -1,10 +1,8 @@
 package com.xiangyun.prescription;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.mybatis.spring.annotation.MapperScan;
 
-@SpringBootApplication(scanBasePackages = {"com.xiangyun.prescription","com.xiangyun.common"})
-@MapperScan("com.xiangyun.prescription.mapper")
+@SpringBootApplication(scanBasePackages = {"com.xiangyun.prescription"})
 // @EnableDiscoveryClient — disabled in dev mode (no Nacos)
 public class PrescriptionApplication {
     public static void main(String[] args) { SpringApplication.run(PrescriptionApplication.class, args); }
