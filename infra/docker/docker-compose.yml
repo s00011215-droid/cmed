@@ -164,7 +164,8 @@ services:
   rocketmq-namesrv:
     image: apache/rocketmq:5.3.0
     container_name: xiangyun-rocketmq-namesrv
-    restart: unless-stopped
+    restart: "no"
+    profiles: [full]
     environment:
       JAVA_OPT_EXT: "-server -Xms256m -Xmx256m -Xmn128m"
     volumes:
@@ -187,7 +188,8 @@ services:
   rocketmq-broker:
     image: apache/rocketmq:5.3.0
     container_name: xiangyun-rocketmq-broker
-    restart: unless-stopped
+    restart: "no"
+    profiles: [full]
     depends_on:
       rocketmq-namesrv:
         condition: service_healthy
