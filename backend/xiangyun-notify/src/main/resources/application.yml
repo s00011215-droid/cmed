@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: xiangyun-notify
+
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+        import-check:
+          enabled: false
+  autoconfigure:
+    exclude:
+      - com.alibaba.cloud.nacos.NacosConfigAutoConfiguration
+      - com.alibaba.cloud.nacos.discovery.NacosDiscoveryClientAutoConfiguration
+      - com.alibaba.cloud.sentinel.SentinelAutoConfiguration
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.redisson.spring.starter.RedissonAutoConfigurationV2
+
+server:
+  port: 8092
+
+logging:
+  level:
+    com.xiangyun.notify: DEBUG

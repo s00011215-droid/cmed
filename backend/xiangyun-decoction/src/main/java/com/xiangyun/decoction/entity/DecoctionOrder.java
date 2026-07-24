@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.xiangyun.common.base.BaseEntity;
 import lombok.Data; import lombok.EqualsAndHashCode;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Map;
 
 @Data @EqualsAndHashCode(callSuper = true)
@@ -26,5 +26,5 @@ public class DecoctionOrder extends BaseEntity {
     @TableField(typeHandler = JacksonTypeHandler.class)
     private Map<String, Object> receiver;   // JSONB: 收件人
 
-    private LocalDateTime completedAt;
+    private OffsetDateTime completedAt;
 }

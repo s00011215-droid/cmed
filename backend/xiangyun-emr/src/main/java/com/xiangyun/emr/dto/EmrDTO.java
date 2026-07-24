@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 public class EmrDTO {
@@ -28,7 +28,7 @@ public class EmrDTO {
         private Long id; private Long patientId; private String patientName;
         private Long doctorId; private String doctorName;
         private String visitType; private String chiefComplaint;
-        private String diagnosis; private LocalDateTime createdAt;
+        private String diagnosis; private OffsetDateTime createdAt;
     }
     @Data @Schema(description = "EMR 詳情") public static class DetailResponse {
         private Long id; private Long patientId; private String patientName;
@@ -38,6 +38,6 @@ public class EmrDTO {
         private EmrDetail detail;
         private String diagnosis; private String advice;
         private LocalDate followUpDate;
-        private LocalDateTime createdAt;
+        private OffsetDateTime createdAt;
     }
 }

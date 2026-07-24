@@ -9,6 +9,6 @@ import java.util.List;
 @Mapper
 public interface FamilyMemberMapper extends BaseMapper<FamilyMember> {
     @Select("SELECT fm.*, p.name as member_name, p.phone as member_phone FROM family_member fm "
-            + "JOIN patient p ON fm.member_id = p.id WHERE fm.patient_id = #{patientId} AND fm.deleted = false")
+            + "JOIN patient p ON fm.member_id = p.id WHERE fm.patient_id = #{patientId}")
     List<FamilyMember> findByPatientId(Long patientId);
 }

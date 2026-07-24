@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -72,7 +72,7 @@ public class PrescriptionService {
         boolean isNew = req.getId() == null;
         if (isNew) {
             p.setStatus("draft");
-            p.setPrescriptionNo("RX" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+            p.setPrescriptionNo("RX" + OffsetDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
                     + "-" + IdUtil.fastSimpleUUID().substring(0, 6).toUpperCase());
             prescriptionMapper.insert(p);
         } else {

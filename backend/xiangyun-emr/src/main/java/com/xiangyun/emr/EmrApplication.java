@@ -1,9 +1,11 @@
 package com.xiangyun.emr;
+
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-@SpringBootApplication(scanBasePackages = {"com.xiangyun.emr","com.xiangyun.common"})
-@EnableDiscoveryClient
+
+@SpringBootApplication(scanBasePackages = {"com.xiangyun.emr", "com.xiangyun.common"})
+@MapperScan("com.xiangyun.emr.mapper")
 public class EmrApplication {
     public static void main(String[] args) { SpringApplication.run(EmrApplication.class, args); }
 }

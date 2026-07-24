@@ -6,7 +6,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 public class PrescriptionDTO {
@@ -30,7 +30,7 @@ public class PrescriptionDTO {
         private Long doctorId; private String status;
         private Integer doseCount; private BigDecimal totalAmount;
         private String decoctionMethod; private String signStatus;
-        private LocalDateTime createdAt;
+        private OffsetDateTime createdAt;
     }
 
     @Data @Schema(description = "處方詳情") public static class DetailResponse {
@@ -42,9 +42,9 @@ public class PrescriptionDTO {
         private BigDecimal totalAmount; private BigDecimal decoctionFee; private BigDecimal deliveryFee;
         private String decoctionMethod; private String deliveryOption;
         private String diagnosisCode; private String signStatus;
-        private LocalDateTime signedAt; private String signAlgorithm;
+        private OffsetDateTime signedAt; private String signAlgorithm;
         private List<String> warnings;  // 配伍禁忌警告
-        private LocalDateTime createdAt;
+        private OffsetDateTime createdAt;
     }
 
     @Data @Schema(description = "處方狀態流轉") public static class StatusTransition {

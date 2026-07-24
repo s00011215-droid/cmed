@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
@@ -30,7 +30,7 @@ public class FinanceService {
         p.setAmount(req.getAmount());
         p.setMethod(req.getMethod());
         p.setStatus("paid");
-        p.setPaidAt(LocalDateTime.now());
+        p.setPaidAt(OffsetDateTime.now());
         p.setPaymentNo("PAY" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
                 + "-" + IdUtil.fastSimpleUUID().substring(0, 6).toUpperCase());
         paymentMapper.insert(p);
@@ -48,7 +48,7 @@ public class FinanceService {
 
         p.setStatus("refunded");
         p.setRefundAmount(req.getAmount());
-        p.setRefundAt(LocalDateTime.now());
+        p.setRefundAt(OffsetDateTime.now());
         paymentMapper.updateById(p);
         log.info("Refund processed: payment={}, amount={}, reason={}", p.getPaymentNo(), req.getAmount(), req.getReason());
         return p;

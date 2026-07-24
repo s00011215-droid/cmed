@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.xiangyun.common.base.BaseEntity;
 import lombok.Data; import lombok.EqualsAndHashCode;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Data @EqualsAndHashCode(callSuper = true) @TableName(value = "prescription", autoResultMap = true)
@@ -30,7 +30,7 @@ public class Prescription extends BaseEntity {
 
     // 簽章欄位 (P0-2 修正)
     private String signStatus;           // unsigned/signed/verified
-    private Long signedBy; private LocalDateTime signedAt;
+    private Long signedBy; private OffsetDateTime signedAt;
     private String contentHash;          // 原文 SHA-256
     private byte[] cmsSignature;         // PKCS#7 DER
     private String signAlgorithm;

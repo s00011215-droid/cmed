@@ -1,6 +1,11 @@
 spring.application.name: xiangyun-his
-spring.cloud.nacos.discovery.server-addr: localhost:8848
-spring.cloud.nacos.discovery.namespace: xiangyun-zhifang
+spring.cloud.nacos.discovery.enabled: false
+spring.cloud.nacos.config.enabled: false
+spring.cloud.nacos.config.import-check.enabled: false
+spring.cloud.sentinel.enabled: false
+# spring.cloud.nacos.discovery.server-addr: localhost:8848
+# spring.cloud.nacos.discovery.namespace: xiangyun-zhifang
+spring.autoconfigure.exclude: org.redisson.spring.starter.RedissonAutoConfigurationV2
 spring.datasource.url: jdbc:postgresql://localhost:5432/xiangyun_zhifang
 spring.datasource.username: xiangyun_app
 spring.datasource.password: xiangyun_dev_2026

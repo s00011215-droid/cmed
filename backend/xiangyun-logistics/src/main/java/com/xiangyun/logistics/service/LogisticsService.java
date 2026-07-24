@@ -11,7 +11,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 @Slf4j @Service @RequiredArgsConstructor
@@ -60,7 +60,7 @@ public class LogisticsService {
         if (callback.getTraces() != null && !callback.getTraces().isEmpty())
             order.setLatestTrace(callback.getTraces().get(callback.getTraces().size() - 1));
         if ("signed".equals(callback.getStatus())) {
-            order.setSignedAt(LocalDateTime.now());
+            order.setSignedAt(OffsetDateTime.now());
             order.setSignedBy(callback.getSignedBy());
         }
         if ("exception".equals(callback.getStatus()))

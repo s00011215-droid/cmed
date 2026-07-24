@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.xiangyun.common.base.BaseEntity;
 import lombok.Data; import lombok.EqualsAndHashCode;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Map;
 
 @Data @EqualsAndHashCode(callSuper = true)
@@ -24,8 +24,8 @@ public class LogisticsOrder extends BaseEntity {
     @TableField(typeHandler = JacksonTypeHandler.class)
     private Map<String, Object> latestTrace;
 
-    private LocalDateTime estimatedDelivery;
-    private LocalDateTime signedAt;
+    private OffsetDateTime estimatedDelivery;
+    private OffsetDateTime signedAt;
     private String signedBy;
     private String exceptionReason;
 }

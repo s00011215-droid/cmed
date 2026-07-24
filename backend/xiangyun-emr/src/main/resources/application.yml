@@ -1,6 +1,11 @@
 spring.application.name: xiangyun-emr
-spring.cloud.nacos.discovery.server-addr: localhost:8848
-spring.cloud.nacos.discovery.namespace: xiangyun-zhifang
+spring.cloud.nacos.discovery.enabled: false
+spring.cloud.nacos.config.enabled: false
+spring.autoconfigure.exclude:
+  - com.alibaba.cloud.nacos.NacosDiscoveryAutoConfiguration
+  - com.alibaba.cloud.nacos.NacosConfigAutoConfiguration
+  - com.alibaba.cloud.sentinel.SentinelWebAutoConfiguration
+  - com.alibaba.cloud.sentinel.SentinelAutoConfiguration
 spring.datasource.url: jdbc:postgresql://localhost:5432/xiangyun_zhifang
 spring.datasource.username: xiangyun_app
 spring.datasource.password: xiangyun_dev_2026

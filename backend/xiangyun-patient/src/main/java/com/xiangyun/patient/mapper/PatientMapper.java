@@ -10,11 +10,11 @@ import org.apache.ibatis.annotations.Select;
 @Mapper
 public interface PatientMapper extends BaseMapper<Patient> {
 
-    @Select("<script>SELECT * FROM patient WHERE deleted=false "
+    @Select("<script>SELECT * FROM patient WHERE 1=1 "
             + "<if test='keyword!=null'>AND (name ILIKE CONCAT('%',#{keyword},'%') OR phone LIKE CONCAT('%',#{keyword},'%'))</if> "
             + "ORDER BY updated_at DESC</script>")
     Page<Patient> search(Page<Patient> page, @Param("keyword") String keyword);
 
-    @Select("SELECT * FROM patient WHERE phone = #{phone} AND deleted = false LIMIT 1")
+    @Select("SELECT * FROM patient WHERE phone = #{phone} LIMIT 1")
     Patient findByPhone(@Param("phone") String phone);
 }

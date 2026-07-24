@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: xiangyun-finance
+
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+        import-check:
+          enabled: false
+    sentinel:
+      enabled: false
+  autoconfigure:
+    exclude:
+      - com.alibaba.cloud.nacos.NacosConfigAutoConfiguration
+      - com.alibaba.cloud.nacos.discovery.NacosDiscoveryClientAutoConfiguration
+      - com.alibaba.cloud.sentinel.SentinelAutoConfiguration
+      - com.alibaba.cloud.sentinel.SentinelWebAutoConfiguration
+      - com.alibaba.cloud.sentinel.endpoint.SentinelEndpointAutoConfiguration
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/xiangyun_zhifang?currentSchema=public
+    username: xiangyun_app
+    password: xiangyun_dev_2026
+    driver-class-name: org.postgresql.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: xiangyun_redis_2026
+
+server:
+  port: 8086
+
+logging:
+  level:
+    com.xiangyun.finance: DEBUG

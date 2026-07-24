@@ -1,7 +1,7 @@
 package com.xiangyun.inventory.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import lombok.Data;
 
 @Data @TableName("inventory_transaction")
@@ -11,5 +11,5 @@ public class InventoryTransaction {
     private BigDecimal qty; private BigDecimal balanceAfter;
     private String referenceType; private Long referenceId;
     private String notes;
-    private Long createdBy; private LocalDateTime createdAt;
+    private Long createdBy; private OffsetDateTime createdAt;
 }

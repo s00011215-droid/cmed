@@ -50,8 +50,7 @@ public class PatientService {
     public void delete(Long id) {
         Patient p = patientMapper.selectById(id);
         if (p == null) throw new BizException(BizException.ErrorCode.PATIENT_NOT_FOUND);
-        p.setDeleted(true);
-        patientMapper.updateById(p);
+        patientMapper.deleteById(id);
     }
 
     @Transactional

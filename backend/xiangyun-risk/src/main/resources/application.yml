@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: xiangyun-risk
+
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+        import-check:
+          enabled: false
+  autoconfigure:
+    exclude:
+      - com.alibaba.cloud.nacos.NacosConfigAutoConfiguration
+      - com.alibaba.cloud.nacos.discovery.NacosDiscoveryClientAutoConfiguration
+      - com.alibaba.cloud.sentinel.SentinelAutoConfiguration
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.redisson.spring.starter.RedissonAutoConfigurationV2
+
+server:
+  port: 8093
+
+logging:
+  level:
+    com.xiangyun: DEBUG

@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 @Slf4j @Service @RequiredArgsConstructor
@@ -103,7 +103,7 @@ public class DecoctionService {
         // 5. 更新狀態
         order.setStatus(callback.getStatus());
         if ("packaged".equals(callback.getStatus())) order.setVacuumPkgNo(callback.getVacuumPkgNo());
-        if ("handed_over".equals(callback.getStatus())) order.setCompletedAt(LocalDateTime.now());
+        if ("handed_over".equals(callback.getStatus())) order.setCompletedAt(OffsetDateTime.now());
         decoctionOrderMapper.updateById(order);
 
         log.info("Decoction callback processed: {} -> {}", callback.getExternalNo(), callback.getStatus());
