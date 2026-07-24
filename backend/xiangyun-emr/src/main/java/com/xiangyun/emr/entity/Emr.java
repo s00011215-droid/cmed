@@ -7,7 +7,10 @@ import com.xiangyun.common.base.BaseEntity;
 import lombok.Data; import lombok.EqualsAndHashCode;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Data @EqualsAndHashCode(callSuper = true) @TableName(value = "emr", autoResultMap = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Emr extends BaseEntity {
     private Long patientId; private Long doctorId;
     private String visitType;       // online / offline
