@@ -65,9 +65,9 @@ public class InventoryService {
         }
 
         result.setInsufficientMaterials(insufficient);
-        if (!result.getSuccess()) {
+        if (!result.isSuccess()) {
             // 鎖定失敗 → 回滾已鎖部分
-            unlock(new InventoryDTO.UnlockRequest(req.getPrescriptionId()));
+            unlock(new InventoryDTO.UnlockRequest());
         }
         return result;
     }

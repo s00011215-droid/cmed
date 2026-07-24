@@ -1,6 +1,7 @@
 package com.xiangyun.inventory.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import lombok.Data;
 

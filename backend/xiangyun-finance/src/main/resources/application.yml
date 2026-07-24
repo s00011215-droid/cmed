@@ -34,7 +34,7 @@ spring:
       password: xiangyun_redis_2026
 
 server:
-  port: 8086
+  port: 8090
 
 logging:
   level:

@@ -9,4 +9,4 @@ spring.autoconfigure.exclude: org.redisson.spring.starter.RedissonAutoConfigurat
 spring.datasource.url: jdbc:postgresql://localhost:5432/xiangyun_zhifang
 spring.datasource.username: xiangyun_app
 spring.datasource.password: xiangyun_dev_2026
-server.port: 8087
+server.port: 8086

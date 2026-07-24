@@ -25,7 +25,6 @@ spring:
     username: xiangyun_app
     password: xiangyun_dev_2026
     driver-class-name: org.postgresql.Driver
-    type: com.alibaba.druid.pool.DruidDataSource
 
   data:
     redis:
