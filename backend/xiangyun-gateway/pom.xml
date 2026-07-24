@@ -33,11 +33,13 @@
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
         </dependency>
 
-        <!-- Sentinel Gateway Adapter -->
+        <!-- Sentinel Gateway Adapter (disabled: missing sentinel-datasource-extension) -->
+        <!--
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-alibaba-sentinel-gateway</artifactId>
         </dependency>
+        -->
 
         <!-- Redis (Token 校驗 + 限流) -->
         <dependency>
