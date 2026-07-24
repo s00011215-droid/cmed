@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 /**
  * 用戶帳號實體
@@ -39,5 +39,5 @@ public class UserAccount extends BaseEntity {
     private Integer status;
 
     @Schema(description = "最後登入時間")
-    private LocalDateTime lastLoginAt;
+    private OffsetDateTime lastLoginAt;
 }

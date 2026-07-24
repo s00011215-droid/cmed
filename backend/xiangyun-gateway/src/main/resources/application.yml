@@ -6,15 +6,12 @@ spring:
     nacos:
       discovery:
         server-addr: localhost:8848
-        namespace: xiangyun-zhifang
       config:
         server-addr: localhost:8848
-        namespace: xiangyun-zhifang
-        file-extension: yaml
-        shared-configs:
-          - data-id: xiangyun-common.yaml
-            group: DEFAULT_GROUP
-            refresh: true
+        import-check:
+          enabled: false
+  config:
+    import: optional:nacos:xiangyun-common.yaml
 
     gateway:
       discovery:

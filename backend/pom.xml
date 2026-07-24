@@ -24,7 +24,7 @@
         <module>xiangyun-consult</module>
         <module>xiangyun-emr</module>
         <module>xiangyun-prescription</module>
-        <module>xiangyun-sign</module>
+
         <module>xiangyun-his</module>
         <module>xiangyun-material</module>
         <module>xiangyun-inventory</module>

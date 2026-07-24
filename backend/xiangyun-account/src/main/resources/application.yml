@@ -5,18 +5,18 @@ spring:
   cloud:
     nacos:
       discovery:
-        server-addr: localhost:8848
-        namespace: xiangyun-zhifang
+        enabled: false
       config:
-        server-addr: localhost:8848
-        namespace: xiangyun-zhifang
-        file-extension: yaml
-        shared-configs:
-          - data-id: xiangyun-common.yaml
-            group: DEFAULT_GROUP
+        enabled: false
+        import-check:
+          enabled: false
+  autoconfigure:
+    exclude:
+      - com.alibaba.cloud.nacos.NacosConfigAutoConfiguration
+      - com.alibaba.cloud.nacos.discovery.NacosDiscoveryClientAutoConfiguration
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/xiangyun_zhifang
+    url: jdbc:postgresql://localhost:5432/xiangyun_zhifang?currentSchema=public
     username: xiangyun_app
     password: xiangyun_dev_2026
     driver-class-name: org.postgresql.Driver

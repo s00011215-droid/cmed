@@ -55,7 +55,7 @@ public class AccountService {
         }
 
         // 更新最後登入時間
-        user.setLastLoginAt(java.time.LocalDateTime.now());
+        user.setLastLoginAt(java.time.OffsetDateTime.now(java.time.ZoneOffset.UTC));
         userAccountMapper.updateById(user);
 
         return buildLoginResponse(user);
