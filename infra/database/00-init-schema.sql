@@ -440,7 +440,7 @@ CREATE TABLE incompatibility_rule (
     id            BIGINT PRIMARY KEY,
     material_a    BIGINT          NOT NULL REFERENCES material_dict(id),
     material_b    BIGINT          NOT NULL REFERENCES material_dict(id),
-    rule_type     VARCHAR(16)     NOT NULL,                 -- eighteen_antagonism, nineteen_fear
+    rule_type     VARCHAR(32)     NOT NULL,                 -- eighteen_antagonism, nineteen_fear
     description   TEXT,
     severity      VARCHAR(8)      NOT NULL DEFAULT 'warn',  -- warn, block
     created_at    TIMESTAMPTZ     NOT NULL DEFAULT now(),
