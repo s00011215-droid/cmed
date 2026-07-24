@@ -46,7 +46,6 @@ services:
       PGDATA: /var/lib/postgresql/data
     volumes:
       - pg-primary-data:/var/lib/postgresql/data
-      - ./init-scripts:/docker-entrypoint-initdb.d  # 自動執行初始化 SQL
     ports:
       - "5432:5432"
     networks:
@@ -57,22 +56,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    command: |
-      postgres
-      -c shared_preload_libraries=pg_stat_statements,pgcrypto
-      -c max_connections=200
-      -c shared_buffers=512MB
-      -c effective_cache_size=1536MB
-      -c maintenance_work_mem=128MB
-      -c wal_level=replica
-      -c max_wal_senders=3
-      -c wal_keep_size=256MB
-      -c hot_standby=on
-      -c logging_collector=on
-      -c log_directory=/var/log/postgresql
-      -c log_filename=postgresql-%Y-%m-%d.log
-      -c log_min_duration_statement=1000
-      -c log_lock_waits=on
 
   # ==========================================================================
   # 2. PostgreSQL — 從庫（讀取分流）(可選，開發環境可關閉)
