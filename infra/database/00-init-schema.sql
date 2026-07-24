@@ -677,22 +677,23 @@ CREATE INDEX idx_notification_user ON notification (user_id, created_at DESC);
 -- ============================================================================
 
 CREATE TABLE audit_log (
-    id              BIGINT PRIMARY KEY,
+    id              BIGINT NOT NULL,
     clinic_id       BIGINT          NOT NULL,
-    user_id         BIGINT,                                 -- 操作者
-    user_name       VARCHAR(64),                            -- 冗餘：操作者名稱
+    user_id         BIGINT,
+    user_name       VARCHAR(64),
     action          audit_action    NOT NULL,
-    target_table    VARCHAR(64),                            -- 目標表
-    target_id       BIGINT,                                 -- 目標記錄 ID
-    patient_id      BIGINT,                                 -- 涉及的患者
-    old_data        JSONB,                                  -- 變更前數據
-    new_data        JSONB,                                  -- 變更後數據
-    changed_fields  TEXT[],                                 -- 變更的欄位
+    target_table    VARCHAR(64),
+    target_id       BIGINT,
+    patient_id      BIGINT,
+    old_data        JSONB,
+    new_data        JSONB,
+    changed_fields  TEXT[],
     ip_address      INET,
     user_agent      TEXT,
     session_id      VARCHAR(128),
     notes           TEXT,
-    created_at      TIMESTAMPTZ     NOT NULL DEFAULT now()
+    created_at      TIMESTAMPTZ     NOT NULL DEFAULT now(),
+    PRIMARY KEY (id, created_at)
 ) PARTITION BY RANGE (created_at);
 
 -- 審計日誌按月分區
