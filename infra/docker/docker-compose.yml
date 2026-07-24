@@ -25,7 +25,6 @@ volumes:
   nacos-data:
   rocketmq-ns-data:
   rocketmq-broker-data:
-  etcd-data:
 
 # ============================================================================
 # 服務
@@ -262,33 +261,7 @@ services:
       retries: 10
 
   # ==========================================================================
-  # 9. etcd — 分散式鍵值存儲（Patroni 依賴 / 配置中心備選）
-  # ==========================================================================
-  etcd:
-    image: bitnami/etcd:3.5
-    container_name: xiangyun-etcd
-    restart: unless-stopped
-    environment:
-      ALLOW_NONE_AUTHENTICATION: "yes"
-      ETCD_ADVERTISE_CLIENT_URLS: http://etcd:2379
-      ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
-      ETCD_DATA_DIR: /bitnami/etcd/data
-    volumes:
-      - etcd-data:/bitnami/etcd/data
-    ports:
-      - "2379:2379"
-      - "2380:2380"
-    networks:
-      xiangyun-net:
-        ipv4_address: 172.25.0.70
-    healthcheck:
-      test: ["CMD", "etcdctl", "endpoint", "health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # ==========================================================================
-  # 10. XXL-JOB Admin — 定時任務調度中心（可選）
+  # 9. XXL-JOB Admin — 定時任務調度中心（可選）
   # ==========================================================================
   # xxl-job-admin:
   #   image: xuxueli/xxl-job-admin:2.4.0
