@@ -9,5 +9,5 @@ PROJECT_DIR="F:/MDFiles/xiangyun-zhifang/backend"
   "-Dmaven.home=$MAVEN_HOME" \
   "-Dlibrary.jansi.path=$MAVEN_HOME/lib/jansi-native" \
   "-Dmaven.multiModuleProjectDirectory=$PROJECT_DIR" \
-  org.codehaus.classworlds.Launcher \
+  org.codehaus.plexus.classworlds.launcher.Launcher \
   "$@"

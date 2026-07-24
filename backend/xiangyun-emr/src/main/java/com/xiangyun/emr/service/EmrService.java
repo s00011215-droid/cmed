@@ -15,6 +15,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class EmrService {
     private final EmrMapper emrMapper;
 
+    public Page<EmrDTO.ListItem> listAll(int page, int size) {
+        Page<Emr> pg = emrMapper.selectPage(new Page<>(page, size), null);
+        return (Page<EmrDTO.ListItem>) pg.convert(e -> {
+            EmrDTO.ListItem item = BeanUtil.copyProperties(e, EmrDTO.ListItem.class);
+            item.setPatientName(""); item.setDoctorName("");
+            return item;
+        });
+    }
+
     public Page<EmrDTO.ListItem> listByPatient(Long patientId, int page, int size) {
         Page<Emr> pg = emrMapper.findByPatient(new Page<>(page, size), patientId);
         return (Page<EmrDTO.ListItem>) pg.convert(e -> {

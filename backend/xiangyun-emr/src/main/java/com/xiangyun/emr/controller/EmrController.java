@@ -15,6 +15,13 @@ import org.springframework.web.bind.annotation.*;
 public class EmrController {
     private final EmrService emrService;
 
+    @GetMapping
+    @Operation(summary = "病歷分頁列表")
+    public Result<Page<EmrDTO.ListItem>> list(
+            @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "20") int size) {
+        return Result.ok(emrService.listAll(page, size));
+    }
+
     @GetMapping("/patient/{patientId}")
     @Operation(summary = "患者病歷列表")
     public Result<Page<EmrDTO.ListItem>> listByPatient(@PathVariable Long patientId,

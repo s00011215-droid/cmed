@@ -3,7 +3,7 @@ package com.xiangyun.notify;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication(scanBasePackages = {"com.xiangyun.notify"})
+@SpringBootApplication(scanBasePackages = {"com.xiangyun.notify", "com.xiangyun.common"})
 // @EnableDiscoveryClient — disabled in dev mode (no Nacos)
 public class NotifyApplication {
 

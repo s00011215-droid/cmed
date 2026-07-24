@@ -15,6 +15,12 @@ import java.util.List;
 public class HisController {
     private final HisService hisService;
 
+    @GetMapping("/hello")
+    @Operation(summary = "健康檢查")
+    public Result<String> hello() {
+        return Result.ok("Hello, XiangYun HIS Service");
+    }
+
     @PostMapping("/register")
     @Operation(summary = "掛號分診")
     public Result<HisDTO.Registration> register(@Valid @RequestBody HisDTO.RegistrationRequest req) {

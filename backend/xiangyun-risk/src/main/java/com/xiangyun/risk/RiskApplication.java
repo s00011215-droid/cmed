@@ -3,7 +3,7 @@ package com.xiangyun.risk;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication(scanBasePackages = {"com.xiangyun.risk"})
+@SpringBootApplication(scanBasePackages = {"com.xiangyun.risk", "com.xiangyun.common"})
 // @EnableDiscoveryClient — disabled in dev mode (no Nacos)
 public class RiskApplication {
 
