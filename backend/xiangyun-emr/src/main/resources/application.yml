@@ -31,6 +31,9 @@ logging:
   level:
     com.xiangyun.emr: DEBUG
 
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
 mybatis-plus:
   global-config:
     db-config:

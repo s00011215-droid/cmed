@@ -8,9 +8,12 @@ import lombok.Data; import lombok.EqualsAndHashCode;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 @Data @EqualsAndHashCode(callSuper = true) @TableName(value = "emr", autoResultMap = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class Emr extends BaseEntity {
     private Long patientId; private Long doctorId;
     private String visitType;       // online / offline
