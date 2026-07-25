@@ -1,3 +1,4 @@
-// 祥雲智方 — 患者端入口
-// Vite dev server 自動載入 apps/patient/src/main.ts
-import './apps/patient/src/main'
+// Multi-app entry — imports based on MODE
+const mode = import.meta.env.MODE
+if (mode === 'doctor') import('./apps/doctor/src/main')
+else import('./apps/patient/src/main')
