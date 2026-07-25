@@ -19,7 +19,7 @@ public class EmrDTO {
     public static class SaveRequest {
         private Long id;
         @NotNull private Long patientId;
-        @NotNull private Long doctorId;
+        private Long doctorId;
         @NotBlank private String visitType;
         private String chiefComplaint;
         private String presentIllness;

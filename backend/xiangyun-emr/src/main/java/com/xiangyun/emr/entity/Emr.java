@@ -30,6 +30,7 @@ public class Emr extends BaseEntity {
 
     // ---- JSONB 內部結構 ----
     @Data
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class EmrDetail {
         private Inspection inspection;
         private Auscultation auscultation;
