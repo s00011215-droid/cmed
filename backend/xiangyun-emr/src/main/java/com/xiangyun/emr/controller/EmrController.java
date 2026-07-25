@@ -50,6 +50,10 @@ public class EmrController {
             String uid = request.getHeader("X-User-Id");
             if (uid != null) req.setDoctorId(Long.valueOf(uid));
         }
+        if (req.getClinicId() == null) {
+            String cid = request.getHeader("X-Clinic-Id");
+            if (cid != null) req.setClinicId(Long.valueOf(cid));
+        }
         return Result.ok(emrService.save(req));
     }
 }

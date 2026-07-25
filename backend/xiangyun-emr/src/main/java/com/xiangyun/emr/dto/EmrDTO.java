@@ -20,6 +20,7 @@ public class EmrDTO {
         private Long id;
         @NotNull private Long patientId;
         private Long doctorId;
+        private Long clinicId;
         @NotBlank private String visitType;
         private String chiefComplaint;
         private String presentIllness;
