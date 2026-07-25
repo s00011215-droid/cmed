@@ -1,5 +1,8 @@
 package com.xiangyun.prescription.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
@@ -28,21 +31,22 @@ public class Prescription extends BaseEntity {
     private String deliveryOption;
     private String diagnosisCode;
 
-    @TableField(exist = false)
-    private String signStatus;
-    @TableField(exist = false)
-    private Long signedBy;
-    @TableField(exist = false)
-    private OffsetDateTime signedAt;
+    @TableField(exist = false) private String signStatus;
+    @TableField(exist = false) private Long signedBy;
+    @TableField(exist = false) private OffsetDateTime signedAt;
 
     @Data
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class PrescriptionItem {
         private Long materialId;
+        @JsonProperty("material_name")
         private String materialName;
         private BigDecimal dosage;
         private String unit;
         private String processing;
+        @JsonProperty("decoction_note")
         private String decoctionNote;
+        @JsonProperty("unit_price")
         private BigDecimal unitPrice;
         private BigDecimal subtotal;
     }
