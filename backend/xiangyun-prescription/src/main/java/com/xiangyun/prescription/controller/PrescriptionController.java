@@ -31,15 +31,14 @@ public class PrescriptionController {
     }
 
     @PostMapping
-    @PostMapping
     public Result<PrescriptionDTO.DetailResponse> save(@Valid @RequestBody PrescriptionDTO.SaveRequest req) {
-        if (req.getDoctorId() == null) {
+        if (req.doctorId == null) {
             String uid = request.getHeader("X-User-Id");
-            if (uid != null) req.setDoctorId(Long.valueOf(uid));
+            if (uid != null) req.doctorId = Long.valueOf(uid);
         }
-        if (req.getClinicId() == null) {
+        if (req.clinicId == null) {
             String cid = request.getHeader("X-Clinic-Id");
-            if (cid != null) req.setClinicId(Long.valueOf(cid));
+            if (cid != null) req.clinicId = Long.valueOf(cid);
         }
         return Result.ok(prescriptionService.save(req));
     }

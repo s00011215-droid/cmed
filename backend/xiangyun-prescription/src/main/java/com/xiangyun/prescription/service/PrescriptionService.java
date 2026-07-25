@@ -40,17 +40,17 @@ public class PrescriptionService {
         Prescription p = prescriptionMapper.selectById(id);
         if (p == null) throw new BizException(BizException.ErrorCode.PRESCRIPTION_NOT_FOUND);
         PrescriptionDTO.DetailResponse resp = BeanUtil.copyProperties(p, PrescriptionDTO.DetailResponse.class);
-        resp.setWarnings(checkIncompatibility(p.items));
+        resp.warnings = checkIncompatibility(p.items);
         return resp;
     }
 
     @Transactional
     public PrescriptionDTO.DetailResponse save(PrescriptionDTO.SaveRequest req) {
-        Prescription p = req.getId() != null ? prescriptionMapper.selectById(req.getId()) : new Prescription();
+        Prescription p = req.id != null ? prescriptionMapper.selectById(req.id) : new Prescription();
         if (p == null) throw new BizException(BizException.ErrorCode.PRESCRIPTION_NOT_FOUND);
 
         BeanUtil.copyProperties(req, p, "id","items");
-        p.items = req.getItems();
+        p.items = req.items;
 
         BigDecimal total = BigDecimal.ZERO;
         for (PrescriptionItem item : p.items) {
@@ -59,10 +59,9 @@ public class PrescriptionService {
                 total = total.add(item.subtotal);
             }
         }
-        p.totalAmount = total.multiply(BigDecimal.valueOf(req.getDoseCount()));
+        p.totalAmount = total.multiply(BigDecimal.valueOf(req.doseCount));
 
-        boolean isNew = req.getId() == null;
-        if (isNew) {
+        if (req.id == null) {
             p.status = "draft";
             p.prescriptionNo = "RX" + OffsetDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
                     + "-" + IdUtil.fastSimpleUUID().substring(0, 6).toUpperCase();
@@ -74,7 +73,7 @@ public class PrescriptionService {
         }
 
         PrescriptionDTO.DetailResponse resp = BeanUtil.copyProperties(p, PrescriptionDTO.DetailResponse.class);
-        resp.setWarnings(checkIncompatibility(p.items));
+        resp.warnings = checkIncompatibility(p.items);
         return resp;
     }
 
@@ -99,10 +98,6 @@ public class PrescriptionService {
         prescriptionMapper.updateById(p);
     }
 
-    private List<String> checkIncompatibility(List<PrescriptionItem> items) {
-        return java.util.Collections.emptyList();
-    }
-    private List<String> checkIncompatibilityBlockers(List<PrescriptionItem> items) {
-        return java.util.Collections.emptyList();
-    }
+    private List<String> checkIncompatibility(List<PrescriptionItem> items) { return List.of(); }
+    private List<String> checkIncompatibilityBlockers(List<PrescriptionItem> items) { return List.of(); }
 }

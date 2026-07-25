@@ -15,31 +15,24 @@ public class Prescription extends BaseEntity {
     public Long patientId; public Long doctorId; public Long emrId;
     public String visitType;
     public String status;
-    private Integer doseCount;           // 劑數
+    public Integer doseCount;
     public BigDecimal totalAmount;
     public List<PrescriptionItem> items;
-    private BigDecimal decoctionFee;     // 代煎費
-    private BigDecimal deliveryFee;      // 配送費
-    private String decoctionMethod;      // self / center
-    private String deliveryOption;       // pickup / delivery
-    private String diagnosisCode;
-
-    // 簽章欄位 (P0-2 修正)
-    private String signStatus;           // unsigned/signed/verified
-    private Long signedBy; private OffsetDateTime signedAt;
-    private String contentHash;          // 原文 SHA-256
-    private byte[] cmsSignature;         // PKCS#7 DER
-    private String signAlgorithm;
+    public BigDecimal decoctionFee;
+    public BigDecimal deliveryFee;
+    public String decoctionMethod;
+    public String deliveryOption;
+    public String diagnosisCode;
 
     @Data
     public static class PrescriptionItem {
-        private Long materialId;
-        private String materialName;
-        private BigDecimal dosage;
-        private String unit;
-        private String processing;       // 炮製方法
-        private String decoctionNote;    // 先煎/後下/烊化/包煎/冲服/無
-        private BigDecimal unitPrice;
-        private BigDecimal subtotal;
+        public Long materialId;
+        public String materialName;
+        public BigDecimal dosage;
+        public String unit;
+        public String processing;
+        public String decoctionNote;
+        public BigDecimal unitPrice;
+        public BigDecimal subtotal;
     }
 }

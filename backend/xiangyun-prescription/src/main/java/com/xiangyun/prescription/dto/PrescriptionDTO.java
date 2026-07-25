@@ -8,7 +8,6 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
-
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
@@ -17,42 +16,44 @@ public class PrescriptionDTO {
     @Data @Schema(description = "建立/更新處方")
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class SaveRequest {
-        private Long id;
-        @NotNull private Long patientId; @NotNull private Long doctorId;
-        private Long emrId;
-        @NotBlank private String visitType;
-        @Min(1) private Integer doseCount;
-        @Min(1) private Integer doseDays;
-        @NotEmpty @Valid private List<PrescriptionItem> items;
-        private String decoctionMethod;  // self / center
-        private String deliveryOption;   // pickup / delivery
-        private String diagnosisCode;
+        public Long id;
+        @NotNull public Long patientId;
+        public Long doctorId;
+        public Long clinicId;
+        public Long emrId;
+        @NotBlank public String visitType;
+        @Min(1) public Integer doseCount;
+        @Min(1) public Integer doseDays;
+        @NotEmpty @Valid public List<PrescriptionItem> items;
+        public String decoctionMethod;
+        public String deliveryOption;
+        public String diagnosisCode;
     }
 
     @Data @Schema(description = "處方列表項") public static class ListItem {
-        private Long id; private String prescriptionNo; private Long patientId;
-        private Long doctorId; private String status;
-        private Integer doseCount; private BigDecimal totalAmount;
-        private String decoctionMethod; private String signStatus;
-        private OffsetDateTime createdAt;
+        public Long id; public String prescriptionNo; public Long patientId;
+        public Long doctorId; public String status;
+        public Integer doseCount; public BigDecimal totalAmount;
+        public String decoctionMethod; public String signStatus;
+        public OffsetDateTime createdAt;
     }
 
     @Data @Schema(description = "處方詳情") public static class DetailResponse {
-        private Long id; private String prescriptionNo;
-        private Long patientId; private Long doctorId; private Long emrId;
-        private String visitType; private String status;
-        private Integer doseCount; private Integer doseDays;
-        private List<PrescriptionItem> items;
-        private BigDecimal totalAmount; private BigDecimal decoctionFee; private BigDecimal deliveryFee;
-        private String decoctionMethod; private String deliveryOption;
-        private String diagnosisCode; private String signStatus;
-        private OffsetDateTime signedAt; private String signAlgorithm;
-        private List<String> warnings;  // 配伍禁忌警告
-        private OffsetDateTime createdAt;
+        public Long id; public String prescriptionNo;
+        public Long patientId; public Long doctorId; public Long emrId;
+        public String visitType; public String status;
+        public Integer doseCount; public Integer doseDays;
+        public List<PrescriptionItem> items;
+        public BigDecimal totalAmount; public BigDecimal decoctionFee; public BigDecimal deliveryFee;
+        public String decoctionMethod; public String deliveryOption;
+        public String diagnosisCode; public String signStatus;
+        public OffsetDateTime signedAt; public String signAlgorithm;
+        public List<String> warnings;
+        public OffsetDateTime createdAt;
     }
 
     @Data @Schema(description = "處方狀態流轉") public static class StatusTransition {
-        @NotBlank public String status;  // 目標狀態
-        private String comment;
+        @NotBlank public String status;
+        public String comment;
     }
 }
