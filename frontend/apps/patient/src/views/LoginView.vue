@@ -12,14 +12,17 @@ const error = ref('')
 const loading = ref(false)
 
 async function login() {
+  console.log('login called', username.value, password.value)
   error.value = ''
   loading.value = true
   try {
     const res = await accountApi.login({ username: username.value, password: password.value })
+    console.log('login response', res.data)
     const d = res.data.data
     auth.setAuth(d.accessToken, d.refreshToken, d.userInfo)
     router.push('/')
   } catch (e: any) {
+    console.error('login error', e)
     error.value = e.response?.data?.message || '登入失敗'
   } finally { loading.value = false }
 }
