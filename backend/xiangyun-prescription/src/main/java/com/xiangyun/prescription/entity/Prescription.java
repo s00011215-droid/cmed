@@ -11,17 +11,13 @@ import java.util.List;
 
 @Data @EqualsAndHashCode(callSuper = true) @TableName(value = "prescription", autoResultMap = true)
 public class Prescription extends BaseEntity {
-    private String prescriptionNo;       // 處方編號 (業務唯一)
-    private Long patientId; private Long doctorId; private Long emrId;
-    private String visitType;            // online / offline
-    private String status;               // draft/pending_review/approved/paid/dispensing/completed/voided
+    public String prescriptionNo;
+    public Long patientId; public Long doctorId; public Long emrId;
+    public String visitType;
+    public String status;
     private Integer doseCount;           // 劑數
-    private Integer doseDays;            // 服用天數
-
-    @TableField(typeHandler = JacksonTypeHandler.class)
-    private List<PrescriptionItem> items;  // JSONB: 處方明細
-
-    private BigDecimal totalAmount;
+    public BigDecimal totalAmount;
+    public List<PrescriptionItem> items;
     private BigDecimal decoctionFee;     // 代煎費
     private BigDecimal deliveryFee;      // 配送費
     private String decoctionMethod;      // self / center

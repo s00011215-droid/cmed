@@ -5,22 +5,19 @@ import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xiangyun.common.exception.BizException;
 import com.xiangyun.prescription.dto.PrescriptionDTO;
-import com.xiangyun.prescription.entity.IncompatibilityRule;
 import com.xiangyun.prescription.entity.Prescription;
 import com.xiangyun.prescription.entity.Prescription.PrescriptionItem;
 import com.xiangyun.prescription.mapper.IncompatibilityMapper;
 import com.xiangyun.prescription.mapper.PrescriptionMapper;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
-@Slf4j @Service @RequiredArgsConstructor
+@Service @RequiredArgsConstructor
 public class PrescriptionService {
     private final PrescriptionMapper prescriptionMapper;
     private final IncompatibilityMapper incompatibilityMapper;
@@ -34,8 +31,6 @@ public class PrescriptionService {
         "dispensing",     Set.of("completed","voided")
     );
 
-    // ---- Query ----
-
     public Page<PrescriptionDTO.ListItem> listByPatient(Long patientId, int page, int size) {
         Page<Prescription> pg = prescriptionMapper.findByPatient(new Page<>(page, size), patientId);
         return (Page<PrescriptionDTO.ListItem>) pg.convert(p -> BeanUtil.copyProperties(p, PrescriptionDTO.ListItem.class));
@@ -45,11 +40,9 @@ public class PrescriptionService {
         Prescription p = prescriptionMapper.selectById(id);
         if (p == null) throw new BizException(BizException.ErrorCode.PRESCRIPTION_NOT_FOUND);
         PrescriptionDTO.DetailResponse resp = BeanUtil.copyProperties(p, PrescriptionDTO.DetailResponse.class);
-        resp.setWarnings(checkIncompatibility(p.getItems()));
+        resp.setWarnings(checkIncompatibility(p.items));
         return resp;
     }
-
-    // ---- Save (with auto-calculation + incompatibility check) ----
 
     @Transactional
     public PrescriptionDTO.DetailResponse save(PrescriptionDTO.SaveRequest req) {
@@ -57,66 +50,59 @@ public class PrescriptionService {
         if (p == null) throw new BizException(BizException.ErrorCode.PRESCRIPTION_NOT_FOUND);
 
         BeanUtil.copyProperties(req, p, "id","items");
-        p.setItems(req.getItems());
+        p.items = req.getItems();
 
-        // 自動計算金額
         BigDecimal total = BigDecimal.ZERO;
-        for (PrescriptionItem item : p.getItems()) {
-            if (item.getUnitPrice() != null && item.getDosage() != null) {
-                item.setSubtotal(item.getUnitPrice().multiply(item.getDosage()));
-                total = total.add(item.getSubtotal());
+        for (PrescriptionItem item : p.items) {
+            if (item.unitPrice != null && item.dosage != null) {
+                item.subtotal = item.unitPrice.multiply(item.dosage);
+                total = total.add(item.subtotal);
             }
         }
-        p.setTotalAmount(total.multiply(BigDecimal.valueOf(req.getDoseCount())));
+        p.totalAmount = total.multiply(BigDecimal.valueOf(req.getDoseCount()));
 
         boolean isNew = req.getId() == null;
         if (isNew) {
-            p.setStatus("draft");
-            p.setPrescriptionNo("RX" + OffsetDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
-                    + "-" + IdUtil.fastSimpleUUID().substring(0, 6).toUpperCase());
+            p.status = "draft";
+            p.prescriptionNo = "RX" + OffsetDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+                    + "-" + IdUtil.fastSimpleUUID().substring(0, 6).toUpperCase();
             prescriptionMapper.insert(p);
         } else {
-            if (!ACTIVE_STATUSES.contains(p.getStatus()))
+            if (!ACTIVE_STATUSES.contains(p.status))
                 throw new BizException(BizException.ErrorCode.INVALID_STATUS_TRANSITION);
             prescriptionMapper.updateById(p);
         }
 
         PrescriptionDTO.DetailResponse resp = BeanUtil.copyProperties(p, PrescriptionDTO.DetailResponse.class);
-        resp.setWarnings(checkIncompatibility(p.getItems()));
+        resp.setWarnings(checkIncompatibility(p.items));
         return resp;
     }
-
-    // ---- Status Machine ----
 
     @Transactional
     public void transition(Long id, PrescriptionDTO.StatusTransition req) {
         Prescription p = prescriptionMapper.selectById(id);
         if (p == null) throw new BizException(BizException.ErrorCode.PRESCRIPTION_NOT_FOUND);
 
-        Set<String> allowed = ALLOWED_TRANSITIONS.getOrDefault(p.getStatus(), Set.of());
-        if (!allowed.contains(req.getStatus())) {
-            throw new BizException(422, "不允許從 " + p.getStatus() + " 轉換到 " + req.getStatus());
+        Set<String> allowed = ALLOWED_TRANSITIONS.getOrDefault(p.status, Set.of());
+        if (!allowed.contains(req.status)) {
+            throw new BizException(422, "不允許從 " + p.status + " 轉換到 " + req.status);
         }
 
-        // 提交審核時強制配伍禁忌檢查 (block 級別)
-        if ("pending_review".equals(req.getStatus()) || "approved".equals(req.getStatus())) {
-            List<String> blocks = checkIncompatibilityBlockers(p.getItems());
+        if ("pending_review".equals(req.status) || "approved".equals(req.status)) {
+            List<String> blocks = checkIncompatibilityBlockers(p.items);
             if (!blocks.isEmpty())
                 throw new BizException(BizException.ErrorCode.INCOMPATIBILITY_DETECTED,
                         "配伍禁忌阻止: " + String.join(", ", blocks));
         }
 
-        p.setStatus(req.getStatus());
+        p.status = req.status;
         prescriptionMapper.updateById(p);
-        log.info("Prescription {} status: {} -> {}", p.getPrescriptionNo(), p.getStatus(), req.getStatus());
     }
-
-    // ---- Incompatibility Engine ----
 
     private List<String> checkIncompatibility(List<PrescriptionItem> items) {
-        return java.util.Collections.emptyList(); // TODO
+        return java.util.Collections.emptyList();
     }
     private List<String> checkIncompatibilityBlockers(List<PrescriptionItem> items) {
-        return java.util.Collections.emptyList(); // TODO
+        return java.util.Collections.emptyList();
     }
 }

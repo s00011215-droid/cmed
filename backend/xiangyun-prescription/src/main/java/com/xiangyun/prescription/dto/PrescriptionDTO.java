@@ -52,7 +52,7 @@ public class PrescriptionDTO {
     }
 
     @Data @Schema(description = "處方狀態流轉") public static class StatusTransition {
-        @NotBlank private String status;  // 目標狀態
+        @NotBlank public String status;  // 目標狀態
         private String comment;
     }
 }
