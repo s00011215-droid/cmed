@@ -42,6 +42,14 @@ export default defineConfig({
       '@admin': resolve(__dirname, 'apps/admin/src')
     }
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true
+      }
+    }
+  },
   css: {
     preprocessorOptions: {
       scss: {
