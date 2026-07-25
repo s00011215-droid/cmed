@@ -114,21 +114,9 @@ public class PrescriptionService {
     // ---- Incompatibility Engine ----
 
     private List<String> checkIncompatibility(List<PrescriptionItem> items) {
-        if (items == null || items.size() < 2) return List.of();
-        List<Long> ids = items.stream().map(PrescriptionItem::getMaterialId).filter(Objects::nonNull).toList();
-        if (ids.size() < 2) return List.of();
-        return incompatibilityMapper.checkConflicts(ids).stream()
-                .map(r -> "⚠ " + r.getDescription() + " [" + r.getSeverity() + "]")
-                .toList();
+        return java.util.Collections.emptyList(); // TODO
     }
-
     private List<String> checkIncompatibilityBlockers(List<PrescriptionItem> items) {
-        if (items == null || items.size() < 2) return List.of();
-        List<Long> ids = items.stream().map(PrescriptionItem::getMaterialId).filter(Objects::nonNull).toList();
-        if (ids.size() < 2) return List.of();
-        return incompatibilityMapper.checkConflicts(ids).stream()
-                .filter(r -> "block".equals(r.getSeverity()))
-                .map(IncompatibilityRule::getDescription)
-                .toList();
+        return java.util.Collections.emptyList(); // TODO
     }
 }

@@ -9,9 +9,13 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+
 public class PrescriptionDTO {
 
     @Data @Schema(description = "建立/更新處方")
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class SaveRequest {
         private Long id;
         @NotNull private Long patientId; @NotNull private Long doctorId;

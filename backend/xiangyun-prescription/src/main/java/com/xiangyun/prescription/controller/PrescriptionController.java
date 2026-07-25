@@ -6,6 +6,7 @@ import com.xiangyun.prescription.dto.PrescriptionDTO;
 import com.xiangyun.prescription.service.PrescriptionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "電子處方", description = "處方 CRUD + 配伍禁忌校驗 + 電子簽章 + 狀態機")
 public class PrescriptionController {
     private final PrescriptionService prescriptionService;
+    private final HttpServletRequest request;
 
     @GetMapping("/patient/{patientId}")
     @Operation(summary = "患者處方列表")
@@ -29,8 +31,16 @@ public class PrescriptionController {
     }
 
     @PostMapping
-    @Operation(summary = "建立/編輯處方（自動計算金額 + 配伍禁忌檢查）")
+    @PostMapping
     public Result<PrescriptionDTO.DetailResponse> save(@Valid @RequestBody PrescriptionDTO.SaveRequest req) {
+        if (req.getDoctorId() == null) {
+            String uid = request.getHeader("X-User-Id");
+            if (uid != null) req.setDoctorId(Long.valueOf(uid));
+        }
+        if (req.getClinicId() == null) {
+            String cid = request.getHeader("X-Clinic-Id");
+            if (cid != null) req.setClinicId(Long.valueOf(cid));
+        }
         return Result.ok(prescriptionService.save(req));
     }
 
