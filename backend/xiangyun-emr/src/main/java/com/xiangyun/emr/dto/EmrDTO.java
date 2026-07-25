@@ -1,5 +1,7 @@
 package com.xiangyun.emr.dto;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.xiangyun.emr.entity.Emr.EmrDetail;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -9,8 +11,11 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+@Data
 public class EmrDTO {
-    @Data @Schema(description = "建立/更新 EMR")
+
+    @Data
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class SaveRequest {
         private Long id;
         @NotNull private Long patientId;
