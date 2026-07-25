@@ -20,31 +20,30 @@ public class PrescriptionController {
     @GetMapping("/patient/{patientId}")
     @Operation(summary = "患者處方列表")
     public Result<Page<PrescriptionDTO.ListItem>> listByPatient(@PathVariable Long patientId,
-            @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "10") int size) {
         return Result.ok(prescriptionService.listByPatient(patientId, page, size));
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "處方詳情（含配伍禁忌警告）")
     public Result<PrescriptionDTO.DetailResponse> get(@PathVariable Long id) {
         return Result.ok(prescriptionService.getDetail(id));
     }
 
     @PostMapping
     public Result<PrescriptionDTO.DetailResponse> save(@Valid @RequestBody PrescriptionDTO.SaveRequest req) {
-        if (req.doctorId == null) {
+        if (req.getDoctorId() == null) {
             String uid = request.getHeader("X-User-Id");
-            if (uid != null) req.doctorId = Long.valueOf(uid);
+            if (uid != null) req.setDoctorId(Long.valueOf(uid));
         }
-        if (req.clinicId == null) {
+        if (req.getClinicId() == null) {
             String cid = request.getHeader("X-Clinic-Id");
-            if (cid != null) req.clinicId = Long.valueOf(cid);
+            if (cid != null) req.setClinicId(Long.valueOf(cid));
         }
         return Result.ok(prescriptionService.save(req));
     }
 
     @PostMapping("/{id}/transition")
-    @Operation(summary = "處方狀態流轉", description = "draft→pending_review→approved→paid→dispensing→completed")
+    @Operation(summary = "處方狀態流轉")
     public Result<Void> transition(@PathVariable Long id, @Valid @RequestBody PrescriptionDTO.StatusTransition req) {
         prescriptionService.transition(id, req);
         return Result.ok();

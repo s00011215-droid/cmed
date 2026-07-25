@@ -11,28 +11,39 @@ import java.util.List;
 
 @Data @EqualsAndHashCode(callSuper = true) @TableName(value = "prescription", autoResultMap = true)
 public class Prescription extends BaseEntity {
-    public String prescriptionNo;
-    public Long patientId; public Long doctorId; public Long emrId;
-    public String visitType;
-    public String status;
-    public Integer doseCount;
-    public BigDecimal totalAmount;
-    public List<PrescriptionItem> items;
-    public BigDecimal decoctionFee;
-    public BigDecimal deliveryFee;
-    public String decoctionMethod;
-    public String deliveryOption;
-    public String diagnosisCode;
+    private String prescriptionNo;
+    private Long patientId; private Long doctorId; private Long emrId;
+    private String visitType;
+    private String status;
+    private Integer doseCount;
+    private Integer doseDays;
+
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private List<PrescriptionItem> items;
+
+    private BigDecimal totalAmount;
+    private BigDecimal decoctionFee;
+    private BigDecimal deliveryFee;
+    private String decoctionMethod;
+    private String deliveryOption;
+    private String diagnosisCode;
+
+    @TableField(exist = false)
+    private String signStatus;
+    @TableField(exist = false)
+    private Long signedBy;
+    @TableField(exist = false)
+    private OffsetDateTime signedAt;
 
     @Data
     public static class PrescriptionItem {
-        public Long materialId;
-        public String materialName;
-        public BigDecimal dosage;
-        public String unit;
-        public String processing;
-        public String decoctionNote;
-        public BigDecimal unitPrice;
-        public BigDecimal subtotal;
+        private Long materialId;
+        private String materialName;
+        private BigDecimal dosage;
+        private String unit;
+        private String processing;
+        private String decoctionNote;
+        private BigDecimal unitPrice;
+        private BigDecimal subtotal;
     }
 }

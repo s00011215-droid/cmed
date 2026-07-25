@@ -10,6 +10,7 @@ import com.xiangyun.prescription.entity.Prescription.PrescriptionItem;
 import com.xiangyun.prescription.mapper.IncompatibilityMapper;
 import com.xiangyun.prescription.mapper.PrescriptionMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
@@ -17,7 +18,7 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-@Service @RequiredArgsConstructor
+@Slf4j @Service @RequiredArgsConstructor
 public class PrescriptionService {
     private final PrescriptionMapper prescriptionMapper;
     private final IncompatibilityMapper incompatibilityMapper;
@@ -40,40 +41,40 @@ public class PrescriptionService {
         Prescription p = prescriptionMapper.selectById(id);
         if (p == null) throw new BizException(BizException.ErrorCode.PRESCRIPTION_NOT_FOUND);
         PrescriptionDTO.DetailResponse resp = BeanUtil.copyProperties(p, PrescriptionDTO.DetailResponse.class);
-        resp.warnings = checkIncompatibility(p.items);
+        resp.setWarnings(checkIncompatibility(p.getItems()));
         return resp;
     }
 
     @Transactional
     public PrescriptionDTO.DetailResponse save(PrescriptionDTO.SaveRequest req) {
-        Prescription p = req.id != null ? prescriptionMapper.selectById(req.id) : new Prescription();
+        Prescription p = req.getId() != null ? prescriptionMapper.selectById(req.getId()) : new Prescription();
         if (p == null) throw new BizException(BizException.ErrorCode.PRESCRIPTION_NOT_FOUND);
 
         BeanUtil.copyProperties(req, p, "id","items");
-        p.items = req.items;
+        p.setItems(req.getItems());
 
         BigDecimal total = BigDecimal.ZERO;
-        for (PrescriptionItem item : p.items) {
-            if (item.unitPrice != null && item.dosage != null) {
-                item.subtotal = item.unitPrice.multiply(item.dosage);
-                total = total.add(item.subtotal);
+        for (PrescriptionItem item : p.getItems()) {
+            if (item.getUnitPrice() != null && item.getDosage() != null) {
+                item.setSubtotal(item.getUnitPrice().multiply(item.getDosage()));
+                total = total.add(item.getSubtotal());
             }
         }
-        p.totalAmount = total.multiply(BigDecimal.valueOf(req.doseCount));
+        p.setTotalAmount(total.multiply(BigDecimal.valueOf(req.getDoseCount())));
 
-        if (req.id == null) {
-            p.status = "draft";
-            p.prescriptionNo = "RX" + OffsetDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
-                    + "-" + IdUtil.fastSimpleUUID().substring(0, 6).toUpperCase();
+        if (req.getId() == null) {
+            p.setStatus("draft");
+            p.setPrescriptionNo("RX" + OffsetDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+                    + "-" + IdUtil.fastSimpleUUID().substring(0, 6).toUpperCase());
             prescriptionMapper.insert(p);
         } else {
-            if (!ACTIVE_STATUSES.contains(p.status))
+            if (!ACTIVE_STATUSES.contains(p.getStatus()))
                 throw new BizException(BizException.ErrorCode.INVALID_STATUS_TRANSITION);
             prescriptionMapper.updateById(p);
         }
 
         PrescriptionDTO.DetailResponse resp = BeanUtil.copyProperties(p, PrescriptionDTO.DetailResponse.class);
-        resp.warnings = checkIncompatibility(p.items);
+        resp.setWarnings(checkIncompatibility(p.getItems()));
         return resp;
     }
 
@@ -82,20 +83,21 @@ public class PrescriptionService {
         Prescription p = prescriptionMapper.selectById(id);
         if (p == null) throw new BizException(BizException.ErrorCode.PRESCRIPTION_NOT_FOUND);
 
-        Set<String> allowed = ALLOWED_TRANSITIONS.getOrDefault(p.status, Set.of());
-        if (!allowed.contains(req.status)) {
-            throw new BizException(422, "不允許從 " + p.status + " 轉換到 " + req.status);
+        Set<String> allowed = ALLOWED_TRANSITIONS.getOrDefault(p.getStatus(), Set.of());
+        if (!allowed.contains(req.getStatus())) {
+            throw new BizException(422, "不允許從 " + p.getStatus() + " 轉換到 " + req.getStatus());
         }
 
-        if ("pending_review".equals(req.status) || "approved".equals(req.status)) {
-            List<String> blocks = checkIncompatibilityBlockers(p.items);
+        if ("pending_review".equals(req.getStatus()) || "approved".equals(req.getStatus())) {
+            List<String> blocks = checkIncompatibilityBlockers(p.getItems());
             if (!blocks.isEmpty())
                 throw new BizException(BizException.ErrorCode.INCOMPATIBILITY_DETECTED,
                         "配伍禁忌阻止: " + String.join(", ", blocks));
         }
 
-        p.status = req.status;
+        p.setStatus(req.getStatus());
         prescriptionMapper.updateById(p);
+        log.info("Prescription {} status -> {}", p.getPrescriptionNo(), req.getStatus());
     }
 
     private List<String> checkIncompatibility(List<PrescriptionItem> items) { return List.of(); }
